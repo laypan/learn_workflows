@@ -9,6 +9,8 @@ var gulp = require('gulp'),
     uglify = require('gulp-uglify'),
     minifyHTML = require('gulp-minify-html'),
     jsonminify = require('gulp-jsonminify'),
+     imagemin = require('gulp-imagemin'),
+     pngcrush = require('imagemin-pngcrush'),
     concat = require('gulp-concat');
 
 // 定義所需組譯程式的參數
@@ -40,12 +42,7 @@ if (env==='development') {
 // 指定coffeescript的組譯路徑，* =>全部的檔案
 coffeeSources = ['components/coffee/*.coffee'];
 // 指定所有的js檔案
-jsSources = [
-    'components/scripts/rclick.js',
-    'components/scripts/pixgrid.js',
-    'components/scripts/tagline.js',
-    'components/scripts/template.js'
-];
+jsSources     = ['components/scripts/*.js' ];
 // 指定sass檔案路徑
 sassSources = ['components/sass/style.scss'];
 // 指定html檔案路徑，outputDir是在上面NODE_ENV設定的路徑參數
@@ -94,6 +91,7 @@ gulp.task('watch', function() {
     gulp.watch('components/sass/*.scss', ['compass']);
     gulp.watch('builds/development/*.html', ['html']);
     gulp.watch('builds/development/js/*.json', ['json']);
+    gulp.watch('builds/development/images/**/*.*', ['images']);
 });
 // 使用gulp-connect，並加入livereload功能讓瀏覽器能夠監聽檔案自動重整網頁，outputDir是NODE_ENV設定的builds/development/
 gulp.task('connect', function() {
@@ -110,6 +108,20 @@ gulp.task('html', function() {
     	.pipe(gulpif(env === 'production' , gulp.dest(outputDir)))
         .pipe(connect.reload())
 });
+
+//使用imagemin把jpg.gif.png壓縮最小化，並且解譯到production資料夾內
+gulp.task('images' , function() {
+    gulp.src('builds/development/images/**/*.*')
+        .pipe(gulpif(env === 'production' , imagemin({
+            progressive: true,
+            svgoPlugins: [{removeViewBox: false}],
+            use: [pngcrush()]
+        })))
+        .pipe(gulpif(env === 'production' , gulp.dest(outputDir + 'images')))
+        .pipe(connect.reload())
+});
+
+
 // 因為html以及json不需要解譯，他只要儲存就好，所以單獨設定他儲存後就可以重整
 gulp.task('json', function() {
     gulp.src('builds/development/js/*.json')
@@ -119,4 +131,4 @@ gulp.task('json', function() {
         .pipe(connect.reload())
 });
 // 指定command line裡面所需下的指令，default為只要輸入"gulp"就開始運作
-gulp.task('default', ['html', 'json', 'coffee', 'js', 'compass', 'connect', 'watch']);
+gulp.task('default', ['html', 'json', 'coffee', 'js', 'compass', 'images','connect', 'watch']);
