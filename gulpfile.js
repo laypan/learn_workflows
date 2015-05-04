@@ -5,18 +5,9 @@ var gulp = require('gulp'),
     browserify = require('gulp-browserify'),
     compass = require('gulp-compass'),
     connect = require('gulp-connect'),
+    gulpif = require('gulp-if'),
+    uglify = require('gulp-uglify'),
     concat = require('gulp-concat');
-
-// var gulp = require('gulp'),
-//     gutil = require('gulp-util'),
-//     coffee = require('gulp-coffee'),
-//     browserify = require('gulp-browserify'),
-//     compass = require('gulp-compass'),
-//     connect = require('gulp-connect'),
-//     gulpif = require('gulp-if'),
-//     uglify = require('gulp-uglify'),
-//     minifyHTML = require('gulp-minify-html'),
-//     concat = require('gulp-concat');
 
 // 定義所需組譯程式的參數
 var env,
@@ -77,6 +68,8 @@ gulp.task('js', function() {
     gulp.src(jsSources)
         .pipe(concat('script.js'))
         .pipe(browserify())
+        //使用gulpif讓script.js可以瞬間輕量化，從271KB瞬間變成93KB，真是太神奇了。
+        .pipe(gulpif(env === 'production' , uglify()))
         .pipe(gulp.dest(outputDir + 'js'))
         .pipe(connect.reload())
 });
