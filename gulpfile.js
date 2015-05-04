@@ -8,6 +8,7 @@ var gulp = require('gulp'),
     gulpif = require('gulp-if'),
     uglify = require('gulp-uglify'),
     minifyHTML = require('gulp-minify-html'),
+    jsonminify = require('gulp-jsonminify'),
     concat = require('gulp-concat');
 
 // 定義所需組譯程式的參數
@@ -92,7 +93,7 @@ gulp.task('watch', function() {
     gulp.watch(jsSources, ['js']);
     gulp.watch('components/sass/*.scss', ['compass']);
     gulp.watch('builds/development/*.html', ['html']);
-    gulp.watch(jsonSources, ['json']);
+    gulp.watch('builds/development/js/*.json', ['json']);
 });
 // 使用gulp-connect，並加入livereload功能讓瀏覽器能夠監聽檔案自動重整網頁，outputDir是NODE_ENV設定的builds/development/
 gulp.task('connect', function() {
@@ -104,13 +105,17 @@ gulp.task('connect', function() {
 // 因為html以及json不需要解譯，他只要儲存就好，所以單獨設定他儲存後就可以重整
 gulp.task('html', function() {
     gulp.src('builds/development/*.html')
+    // 使用gulpif以及gulp-minify-html，讓html檔案輕量化，從7kb變成6kb(差異不大..)
     	.pipe(gulpif(env === 'production' , minifyHTML()))
     	.pipe(gulpif(env === 'production' , gulp.dest(outputDir)))
         .pipe(connect.reload())
 });
 // 因為html以及json不需要解譯，他只要儲存就好，所以單獨設定他儲存後就可以重整
 gulp.task('json', function() {
-    gulp.src(jsonSources)
+    gulp.src('builds/development/js/*.json')
+    // 使用gulpif以及gulp-jsonminify，讓json檔案輕量化(差異不大..)
+    	.pipe(gulpif(env === 'production' , jsonminify()))
+    	.pipe(gulpif(env === 'production' , gulp.dest('builds/production/js')))
         .pipe(connect.reload())
 });
 // 指定command line裡面所需下的指令，default為只要輸入"gulp"就開始運作
